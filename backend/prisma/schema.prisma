@@ -1,0 +1,414 @@
+// CarMarket — Prisma schema (MongoDB connector)
+// Generated for an international used-vehicle marketplace.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────
+
+enum RoleName {
+  SUPER_ADMIN
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum VehicleStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  SOLD
+  ARCHIVED
+  REJECTED
+}
+
+enum VehicleCondition {
+  NEW
+  USED
+  CERTIFIED_PRE_OWNED
+  SALVAGE
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+  PLUGIN_HYBRID
+  LPG
+  CNG
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  SEMI_AUTOMATIC
+  CVT
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+  BANK_TRANSFER
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  PAYMENT_UPDATE
+  NEW_MESSAGE
+  PRICE_DROP
+  FAVORITE_BACK_IN_STOCK
+  SYSTEM
+  REVIEW_RECEIVED
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+  BOTH
+}
+
+enum LogLevel {
+  INFO
+  WARN
+  ERROR
+  DEBUG
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Identity & Access
+// ─────────────────────────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        RoleName @unique
+  description String?
+  permissions String[] @default([])
+  userIds     String[] @db.ObjectId @default([])
+  users       User[]   @relation("UserRoles", fields: [userIds], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model User {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  firstName       String
+  lastName        String
+  email           String   @unique
+  passwordHash    String
+  phone           String?
+  avatarUrl       String?
+  isEmailVerified Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  country         String?
+  locale          String   @default("fr")
+  currency        String   @default("EUR")
+
+  roleIds         String[] @db.ObjectId
+  roles           Role[]   @relation("UserRoles", fields: [roleIds], references: [id])
+
+  refreshTokenHash String?
+  lastLoginAt      DateTime?
+
+  passwordResetTokenHash   String?
+  passwordResetExpiresAt   DateTime?
+
+  vehicles      Vehicle[]      @relation("SellerVehicles")
+  favorites     Favorite[]
+  reviews       Review[]       @relation("AuthorReviews")
+  orders        Order[]        @relation("BuyerOrders")
+  addresses     Address[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Catalog
+// ─────────────────────────────────────────────────────────────────────────
+
+model Brand {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  slug      String   @unique
+  logoUrl   String?
+  country   String?
+  isActive  Boolean  @default(true)
+  models    Model[]
+  vehicles  Vehicle[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("brands")
+}
+
+model Model {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  slug      String
+  brandId   String   @db.ObjectId
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  startYear Int?
+  endYear   Int?
+  bodyType  String?
+  vehicles  Vehicle[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([brandId, slug])
+  @@map("models")
+}
+
+model Category {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String     @unique
+  description String?
+  iconUrl     String?
+  parentId    String?    @db.ObjectId
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    Category[] @relation("CategoryTree")
+  vehicles    Vehicle[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Vehicles
+// ─────────────────────────────────────────────────────────────────────────
+
+model Vehicle {
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  slug          String            @unique
+  description   String
+  vin           String?
+  year          Int
+  price         Float
+  currency      String            @default("EUR")
+  mileage       Int
+  mileageUnit   String            @default("km")
+  fuelType      FuelType
+  transmission  TransmissionType
+  condition     VehicleCondition
+  status        VehicleStatus     @default(DRAFT)
+  color         String?
+  doors         Int?
+  seats         Int?
+  enginePower   Int?
+  engineSizeCc  Int?
+  country       String
+  city          String
+  latitude      Float?
+  longitude     Float?
+  isFeatured    Boolean           @default(false)
+  viewsCount    Int               @default(0)
+  averageRating Float             @default(0)
+  reviewsCount  Int               @default(0)
+
+  brandId    String   @db.ObjectId
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  modelId    String   @db.ObjectId
+  model      Model    @relation(fields: [modelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  categoryId String   @db.ObjectId
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  sellerId String @db.ObjectId
+  seller   User   @relation("SellerVehicles", fields: [sellerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  images     VehicleImage[]
+  favorites  Favorite[]
+  reviews    Review[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vehicles")
+}
+
+model VehicleImage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId String   @db.ObjectId
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  url       String
+  altText   String?
+  position  Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("vehicle_images")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Engagement
+// ─────────────────────────────────────────────────────────────────────────
+
+model Favorite {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicleId String   @db.ObjectId
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, vehicleId])
+  @@map("favorites")
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId String   @db.ObjectId
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  authorId  String   @db.ObjectId
+  author    User     @relation("AuthorReviews", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  rating    Int
+  comment   String?
+  isVerifiedPurchase Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([vehicleId, authorId])
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Commerce
+// ─────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber     String      @unique
+  buyerId         String      @db.ObjectId
+  buyer           User        @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status          OrderStatus @default(PENDING)
+  subtotal        Float
+  taxAmount       Float       @default(0)
+  shippingAmount  Float       @default(0)
+  totalAmount     Float
+  currency        String      @default("EUR")
+  billingAddressId  String?   @db.ObjectId
+  shippingAddressId String?   @db.ObjectId
+  items           OrderItem[]
+  payments        Payment[]
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String   @db.ObjectId
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicleId  String   @db.ObjectId
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  unitPrice  Float
+  quantity   Int      @default(1)
+  totalPrice Float
+  createdAt  DateTime @default(now())
+
+  @@map("order_items")
+}
+
+model Payment {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  orderId         String          @db.ObjectId
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider        PaymentProvider
+  status          PaymentStatus   @default(PENDING)
+  amount          Float
+  currency        String          @default("EUR")
+  transactionRef  String?         @unique
+  paidAt          DateTime?
+  failureReason   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("payments")
+}
+
+model Address {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String      @db.ObjectId
+  user       User        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  type       AddressType @default(SHIPPING)
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  state      String?
+  postalCode String
+  country    String
+  phone      String?
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("addresses")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Platform
+// ─────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String            @db.ObjectId
+  user      User              @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean           @default(false)
+  metadata  Json?
+  createdAt DateTime          @default(now())
+
+  @@map("notifications")
+}
+
+model Log {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  level     LogLevel @default(INFO)
+  context   String?
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@map("logs")
+}

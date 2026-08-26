@@ -1,0 +1,142 @@
+import { UsersService } from './users.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthenticatedUser } from '@/auth/types/authenticated-user.type';
+export declare class UsersController {
+    private readonly usersService;
+    constructor(usersService: UsersService);
+    getProfile(user: AuthenticatedUser): Promise<Omit<{
+        roles: {
+            id: string;
+            name: import(".prisma/client").$Enums.RoleName;
+            description: string | null;
+            permissions: string[];
+            userIds: string[];
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        firstName: string;
+        lastName: string;
+        passwordHash: string;
+        phone: string | null;
+        avatarUrl: string | null;
+        isEmailVerified: boolean;
+        isActive: boolean;
+        country: string | null;
+        locale: string;
+        currency: string;
+        roleIds: string[];
+        refreshTokenHash: string | null;
+        lastLoginAt: Date | null;
+        passwordResetTokenHash: string | null;
+        passwordResetExpiresAt: Date | null;
+    }, "passwordHash" | "refreshTokenHash">>;
+    updateProfile(user: AuthenticatedUser, dto: UpdateUserDto): Promise<Omit<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        firstName: string;
+        lastName: string;
+        passwordHash: string;
+        phone: string | null;
+        avatarUrl: string | null;
+        isEmailVerified: boolean;
+        isActive: boolean;
+        country: string | null;
+        locale: string;
+        currency: string;
+        roleIds: string[];
+        refreshTokenHash: string | null;
+        lastLoginAt: Date | null;
+        passwordResetTokenHash: string | null;
+        passwordResetExpiresAt: Date | null;
+    }, "passwordHash" | "refreshTokenHash">>;
+    findAll(): Promise<Omit<{
+        roles: {
+            id: string;
+            name: import(".prisma/client").$Enums.RoleName;
+            description: string | null;
+            permissions: string[];
+            userIds: string[];
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        firstName: string;
+        lastName: string;
+        passwordHash: string;
+        phone: string | null;
+        avatarUrl: string | null;
+        isEmailVerified: boolean;
+        isActive: boolean;
+        country: string | null;
+        locale: string;
+        currency: string;
+        roleIds: string[];
+        refreshTokenHash: string | null;
+        lastLoginAt: Date | null;
+        passwordResetTokenHash: string | null;
+        passwordResetExpiresAt: Date | null;
+    }, "passwordHash" | "refreshTokenHash">[]>;
+    findOne(id: string): Promise<Omit<{
+        roles: {
+            id: string;
+            name: import(".prisma/client").$Enums.RoleName;
+            description: string | null;
+            permissions: string[];
+            userIds: string[];
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        firstName: string;
+        lastName: string;
+        passwordHash: string;
+        phone: string | null;
+        avatarUrl: string | null;
+        isEmailVerified: boolean;
+        isActive: boolean;
+        country: string | null;
+        locale: string;
+        currency: string;
+        roleIds: string[];
+        refreshTokenHash: string | null;
+        lastLoginAt: Date | null;
+        passwordResetTokenHash: string | null;
+        passwordResetExpiresAt: Date | null;
+    }, "passwordHash" | "refreshTokenHash">>;
+    deactivate(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        firstName: string;
+        lastName: string;
+        passwordHash: string;
+        phone: string | null;
+        avatarUrl: string | null;
+        isEmailVerified: boolean;
+        isActive: boolean;
+        country: string | null;
+        locale: string;
+        currency: string;
+        roleIds: string[];
+        refreshTokenHash: string | null;
+        lastLoginAt: Date | null;
+        passwordResetTokenHash: string | null;
+        passwordResetExpiresAt: Date | null;
+    }>;
+}

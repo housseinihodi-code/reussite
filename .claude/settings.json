@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import urllib.parse; print\\(urllib.parse.quote\\('intitle:\\\\\"Fiat 500C\\\\\"'\\)\\)\")",
+      "Bash(curl -s \"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=$\\(python3 -c \"import urllib.parse; print\\(urllib.parse.quote\\('intitle:\\\\\"Fiat 500C\\\\\"'\\)\\)\"\\)&gsrnamespace=6&gsrlimit=15&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=1280&format=json\" -H 'User-Agent: FastDealsAutoDemoSeed/1.0')",
+      "Bash(node -e ' *)",
+      "Bash(mongosh --port 27018 --quiet --eval 'rs.status\\(\\).myState')",
+      "Bash(timeout 60 bash -c 'until curl -sf http://localhost:4000/api/v1/brands >/dev/null 2>&1; do sleep 2; done')",
+      "Bash(mkdir -p /tmp/claude-1000/-home-hodi-Bureau-reussite/189de08d-0a77-4256-9cfb-cc4e9a3bfad3/scratchpad/pw *)",
+      "Bash(node checkout-review.js)"
+    ]
+  }
+}
